@@ -1,6 +1,6 @@
 # Okex
 
-A Ruby wrapper for the [Bitmex API v1](https://www.bitmex.com/api/explorer/)
+A Ruby wrapper for the [OKex API v1](https://www.okex.me/docs/zh/)
 
 ## Installation
 
