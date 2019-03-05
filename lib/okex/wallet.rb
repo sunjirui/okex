@@ -7,8 +7,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/currencies"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -18,8 +17,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/wallet"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -29,13 +27,12 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/wallet/#{currency}"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
     # 资金划转 限速规则：3次/s
-    def transfer_of_funds(currency, amount, from, to, option={})
+    def transfer_of_funds(currency, amount, from, to, options={})
       timestamp = Time.now.utc.iso8601
       method = "POST"
       request_path = "/api/account/v3/transfer"
@@ -44,11 +41,10 @@ module Okex
         amount: amount,
         from: from,
         to: to,
-        sub_account: option[:sub_account],
-        instrument_id: option[:sub_account]
+        sub_account: options[:sub_account],
+        instrument_id: options[:sub_account]
       }.to_json
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.post("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash, body: body)
     end
 
@@ -65,8 +61,7 @@ module Okex
         trade_pwd: trade_pwd,
         fee: fee
       }.to_json
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.post("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash, body: body)
     end
 
@@ -80,8 +75,7 @@ module Okex
         request_path = "/api/account/v3/withdrawal/fee"
       end
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -91,8 +85,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/withdrawal/history"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -102,8 +95,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/withdrawal/history/#{currency}"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -111,23 +103,11 @@ module Okex
     def bill_flow_query(options={})
       timestamp = Time.now.utc.iso8601
       method = "GET"
-      query_hash = {
-        currency: options[:currency],
-        type: options[:type],
-        from: options[:from],
-        to: options[:to],
-        limit: options[:limit]
-      }.compact
-
-      query_params = query_hash.map{|k,v| "#{k}=#{v}" }.join("&")
-      if query_params.present?
-        request_path = "/api/account/v3/ledger?#{query_params}"
-      else
-        request_path = "/api/account/v3/ledger"
-      end
+      query_params = options.compact.map{|k,v| "#{k}=#{v}" }.join("&")
+      request_path = "/api/account/v3/ledger"
+      request_path += "?#{query_params}" if query_params.present?
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -137,8 +117,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/deposit/address?currency=#{currency}"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -148,8 +127,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/deposit/history"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
 
@@ -159,8 +137,7 @@ module Okex
       method = "GET"
       request_path = "/api/account/v3/deposit/history/#{currency}"
       body = ""
-      ok_access_sign = calculation_signature("#{timestamp}#{method}#{request_path}#{body}")
-      final_hash = headers_hash(ok_access_sign, timestamp)
+      final_hash = request_hash(method, request_path, body)
       HTTParty.get("#{Okex::Client::BaseUrl}#{request_path}", headers: final_hash)
     end
   end
